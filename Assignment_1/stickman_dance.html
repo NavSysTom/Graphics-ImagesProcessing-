@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick Figures</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const figures = [];
+
+        function drawStickFigure(x, y, color, limbOffsets, sunglassesColor, faceColor, expression) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.lineWidth = 5; // Set the line width
+
+            // Head
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI * 2, true); // Face
+            ctx.fillStyle = faceColor;
+            ctx.fill();
+            ctx.stroke();
+
+            // Sunglasses
+            ctx.beginPath();
+            ctx.ellipse(-10, -5, 7, 5, 0, 0, Math.PI * 2); // Left lens
+            ctx.ellipse(10, -5, 7, 5, 0, 0, Math.PI * 2); // Right lens
+            ctx.moveTo(-17, -5);
+            ctx.lineTo(17, -5); // Bridge
+            ctx.moveTo(-17, -5);
+            ctx.lineTo(-25, -5); // Left connection
+            ctx.moveTo(17, -5);
+            ctx.lineTo(25, -5); // Right connection
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            ctx.fillStyle = sunglassesColor;
+            ctx.fill();
+
+            // Facial Expression
+            ctx.beginPath();
+            if (expression === 'smile') {
+                ctx.arc(0, 5, 10, 0, Math.PI, false); // Smile
+            } else if (expression === 'frown') {
+                ctx.arc(0, 15, 10, 0, Math.PI, true); // Frown
+            } else {
+                ctx.moveTo(-10, 10);
+                ctx.lineTo(10, 10); // Neutral
+            }
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            // Body
+            ctx.beginPath();
+            ctx.moveTo(0, 20);
+            ctx.lineTo(0, 100);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+
+            // Arms
+            ctx.beginPath();
+            ctx.moveTo(0, 40);
+            ctx.lineTo(-30 + limbOffsets.leftElbowX, 50 + limbOffsets.leftElbowY);
+            ctx.lineTo(-50 + limbOffsets.leftHandX, 40 + limbOffsets.leftHandY);
+            ctx.moveTo(0, 40);
+            ctx.lineTo(30 + limbOffsets.rightElbowX, 60 + limbOffsets.rightElbowY);
+            ctx.lineTo(10 + limbOffsets.rightHandX, 80 + limbOffsets.rightHandY);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+
+            // Legs
+            ctx.beginPath();
+            ctx.moveTo(0, 100);
+            ctx.lineTo(-30 + limbOffsets.leftKneeX, 130 + limbOffsets.leftKneeY);
+            ctx.lineTo(-50 + limbOffsets.leftFootX, 160 + limbOffsets.leftFootY);
+            ctx.moveTo(0, 100);
+            ctx.lineTo(30 + limbOffsets.rightKneeX, 110 + limbOffsets.rightKneeY);
+            ctx.lineTo(10 + limbOffsets.rightFootX, 160 + limbOffsets.rightFootY);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function getRandomExpression() {
+            const expressions = ['smile', 'frown', 'neutral'];
+            return expressions[Math.floor(Math.random() * expressions.length)];
+        }
+
+        function createFigures(count) {
+            figures.length = 0; // Clear existing figures
+            for (let i = 0; i < count; i++) {
+                const randomX = Math.random() * (canvas.width - 40) + 20;
+                const randomY = Math.random() * (canvas.height - 160) + 20;
+                const color = getRandomColor();
+                const sunglassesColor = getRandomColor();
+                const faceColor = getRandomColor();
+                const expression = getRandomExpression();
+                const speedX = (Math.random() - 0.5) * 2;
+                const speedY = (Math.random() - 0.5) * 2;
+                const limbOffsets = {
+                    leftElbowX: 0, leftElbowY: 0,
+                    rightElbowX: 0, rightElbowY: 0,
+                    leftHandX: 0, leftHandY: 0,
+                    rightHandX: 0, rightHandY: 0,
+                    leftKneeX: 0, leftKneeY: 0,
+                    rightKneeX: 0, rightKneeY: 0,
+                    leftFootX: 0, leftFootY: 0,
+                    rightFootX: 0, rightFootY: 0
+                };
+                figures.push({ x: randomX, y: randomY, color, speedX, speedY, limbOffsets, sunglassesColor, faceColor, expression });
+            }
+        }
+
+        function updateFigures() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            figures.forEach(figure => {
+                figure.x += figure.speedX;
+                figure.y += figure.speedY;
+
+                // Bounce off the canvas boundaries
+                if (figure.x < 20 || figure.x > canvas.width - 20) {
+                    figure.speedX *= -1;
+                }
+                if (figure.y < 20 || figure.y > canvas.height - 160) {
+                    figure.speedY *= -1;
+                }
+
+                // Update limb offsets for dancing effect
+                figure.limbOffsets.leftElbowX = Math.sin(Date.now() / 200) * 5;
+                figure.limbOffsets.leftElbowY = Math.cos(Date.now() / 200) * 5;
+                figure.limbOffsets.rightElbowX = Math.cos(Date.now() / 200) * 5;
+                figure.limbOffsets.rightElbowY = Math.sin(Date.now() / 200) * 5;
+                figure.limbOffsets.leftHandX = Math.cos(Date.now() / 200) * 10;
+                figure.limbOffsets.leftHandY = Math.sin(Date.now() / 200) * 10;
+                figure.limbOffsets.rightHandX = Math.sin(Date.now() / 200) * 10;
+                figure.limbOffsets.rightHandY = Math.cos(Date.now() / 200) * 10;
+                figure.limbOffsets.leftKneeX = Math.sin(Date.now() / 200) * 5;
+                figure.limbOffsets.leftKneeY = Math.cos(Date.now() / 200) * 5;
+                figure.limbOffsets.rightKneeX = Math.cos(Date.now() / 200) * 5;
+                figure.limbOffsets.rightKneeY = Math.sin(Date.now() / 200) * 5;
+                figure.limbOffsets.leftFootX = Math.cos(Date.now() / 200) * 10;
+                figure.limbOffsets.leftFootY = Math.sin(Date.now() / 200) * 10;
+                figure.limbOffsets.rightFootX = Math.sin(Date.now() / 200) * 10;
+                figure.limbOffsets.rightFootY = Math.cos(Date.now() / 200) * 10;
+
+                drawStickFigure(figure.x, figure.y, figure.color, figure.limbOffsets, figure.sunglassesColor, figure.faceColor, figure.expression);
+            });
+            requestAnimationFrame(updateFigures);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+            if (key >= '1' && key <= '5') {
+                createFigures(parseInt(key));
+                updateFigures();
+            } else {
+                alert('Please press a number key between 1 and 5.');
+            }
+        });
+
+        alert('Press a number key between 1 and 5 to draw that many stick figures.');
+    </script>
+</body>
+</html>
